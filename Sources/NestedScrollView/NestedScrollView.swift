@@ -19,5 +19,6 @@ public struct NestedScrollView<Header: View, Content: View>: View {
             header: header,
             content: content
         )
+        .ignoresSafeArea()
     }
 }
