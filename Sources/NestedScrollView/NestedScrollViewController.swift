@@ -39,7 +39,7 @@ final class NestedScrollViewController<Header: View, Content: View>: UIViewContr
     
     private let content: Content
     
-    private var headerView: UIView!
+    private var headerViewController: UIViewController!
     
     private var contentViewController: UIViewController!
     
@@ -57,7 +57,7 @@ final class NestedScrollViewController<Header: View, Content: View>: UIViewContr
     init(header: Header, content: Content) {
         self.header = header
         self.content = content
-        self.headerView = nil
+        self.headerViewController = nil
         self.contentViewController = nil
         self.contentScrollView = nil
         
@@ -80,18 +80,16 @@ final class NestedScrollViewController<Header: View, Content: View>: UIViewContr
         scrollView.delegate = self
         view.addSubview(scrollView)
         
-        let headerConfig = UIHostingConfiguration {
-            header
-        }.margins(.all, 0)
-        headerView = headerConfig.makeContentView()
-        headerView.frame = CGRect(origin: .zero, size: headerView.sizeThatFits(view.bounds.size))
-        scrollView.addSubview(headerView)
+        headerViewController = UIHostingController(rootView: header)
+        addChild(headerViewController)
+        headerViewController.view.frame = CGRect(origin: .zero, size: headerViewController.view.sizeThatFits(view.bounds.size))
+        scrollView.addSubview(headerViewController.view)
 
-        contentViewController = UIHostingController(rootView: content            .introspect(.scrollView, on: .iOS(.v16...)) { scrollview in
+        contentViewController = UIHostingController(rootView: content.introspect(.scrollView, on: .iOS(.v13...)) { scrollview in
             self.contentScrollView = scrollview
         })
         addChild(contentViewController)
-        contentViewController.view.frame = CGRect(origin: CGPoint(x: 0, y: headerView.frame.height), size: contentViewController.view.sizeThatFits(view.bounds.size))
+        contentViewController.view.frame = CGRect(origin: CGPoint(x: 0, y: headerViewController.view.frame.height), size: contentViewController.view.sizeThatFits(view.bounds.size))
 
         scrollView.addSubview(contentViewController.view)
     }
@@ -117,7 +115,7 @@ final class NestedScrollViewController<Header: View, Content: View>: UIViewContr
         }
         scrollView.contentSize = CGSize(
             width: view.frame.width,
-            height: headerView.bounds.height + contentHeight
+            height: headerViewController.view.bounds.height + contentHeight
         )
     }
     
@@ -126,7 +124,7 @@ final class NestedScrollViewController<Header: View, Content: View>: UIViewContr
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard let contentScrollView else { return }
         
-        let diffOffset = max(scrollView.bounds.origin.y - headerView.frame.height, 0)
+        let diffOffset = max(scrollView.bounds.origin.y - headerViewController.view.frame.height, 0)
         contentScrollView.frame.origin = CGPoint(x: 0, y: diffOffset)
         contentScrollView.contentOffset = CGPoint(x: 0, y: diffOffset)
     }
